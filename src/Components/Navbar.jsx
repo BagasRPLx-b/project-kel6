@@ -16,19 +16,7 @@ const Navbar = ({ darkMode, setDarkMode, search, handleSearchChange, handleSearc
           </h1>
 
           {/* Middle: Search */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="relative flex-grow max-w-lg hidden md:block"
-          >
-            <Search className="absolute left-3 top-3 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search games..."
-              value={search}
-              onChange={handleSearchChange}
-              className="w-full pl-10 rounded-full border border-gray-300 dark:border-gray-600 p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-            />
-          </form>
+       
 
           {/* Right: Buttons */}
           <div className="flex items-center space-x-4">
