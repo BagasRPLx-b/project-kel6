@@ -271,17 +271,17 @@ const DetailGame = () => {
               <h2 className="text-2xl font-bold mb-4">Community Comments</h2>
               
               <form onSubmit={handleAddComment} className="mb-6">
-                <div className="flex gap-3">
+                <div className="flex-col gap-3">
                   <input
                     type="text"
                     value={commentInput}
                     onChange={(e) => setCommentInput(e.target.value)}
                     placeholder="Share your thoughts about this game..."
-                    className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 w-full py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button 
                     type="submit" 
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+                    className="px-6 py-3 mt-3 w-full bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
                   >
                     Post
                   </button>
