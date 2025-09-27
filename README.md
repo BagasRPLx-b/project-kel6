@@ -82,5 +82,3 @@ npm run dev
 ## 📜 License
 
 Project ini dibuat untuk keperluan pembelajaran. Tidak untuk penggunaan komersial.
-
-```
