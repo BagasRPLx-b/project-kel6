@@ -1,4 +1,3 @@
-Siap 👍 aku buatin full versi **README.md** yang sudah ada badge, fitur, demo section, dan anggota kelompok. Tinggal kamu **copy paste** ke repo kamu. Nanti kamu hanya perlu ganti link Vercel + screenshot sesuai projectmu.
 
 ---
 
@@ -65,13 +64,7 @@ npm run dev
 
 ## 🔥 Demo & Preview
 
-🔗 **Live Demo**: [Klik di sini](project-kel6-pikk.vercel.app)
-
-📸 **Screenshot**:
-
-![Home Page](https://via.placeholder.com/800x400?text=Screenshot+Home+Page)
-![Detail Game](https://via.placeholder.com/800x400?text=Screenshot+Detail+Game)
-![About Us](https://via.placeholder.com/800x400?text=Screenshot+About+Us)
+🔗 **Live Demo**: [Klik di sini](https://your-vercel-link.vercel.app)
 
 ---
 
@@ -90,3 +83,6 @@ npm run dev
 
 Project ini dibuat untuk keperluan pembelajaran. Tidak untuk penggunaan komersial.
 
+```
+
+---
