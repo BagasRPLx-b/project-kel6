@@ -13,7 +13,10 @@ import {
   FaFire,
   FaArrowLeft,
   FaArrowRight,
+  FaDesktop,
+  FaShoppingCart,
 } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Home = () => {
   const [games, setGames] = useState([]);
@@ -30,6 +33,7 @@ const Home = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState([]);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const API_KEY = "98453db9a240436ba5b62348d213f4a0";
   const pageSize = 20;
@@ -112,12 +116,14 @@ const Home = () => {
     setSelectedGenre(genreSlug);
     setPage(1);
     setShowFilters(false);
+    setMobileFiltersOpen(false);
   };
 
   const handleRatingChange = (ratingValue) => {
     setMinRating(ratingValue);
     setPage(1);
     setShowFilters(false);
+    setMobileFiltersOpen(false);
   };
 
   const clearAllFilters = () => {
@@ -142,6 +148,35 @@ const Home = () => {
     if (rating >= 75) return "bg-green-500";
     if (rating >= 50) return "bg-yellow-500";
     return "bg-red-500";
+  };
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
+    },
+    hover: {
+      y: -5,
+      scale: 1.02,
+      transition: {
+        duration: 0.3
+      }
+    }
   };
 
   return (
@@ -238,19 +273,40 @@ const Home = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center gap-3 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg mt-4 md:mt-0"
-          >
-            <FaFilter />
-            Filters & Sort
-          </button>
+          {/* Mobile Filter Button */}
+          <div className="flex gap-4 mt-4 md:mt-0">
+            <button
+              onClick={() => setMobileFiltersOpen(true)}
+              className="lg:hidden px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center gap-3 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg"
+            >
+              <FaFilter />
+              Filters
+            </button>
+
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="hidden lg:flex px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white items-center gap-3 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg"
+            >
+              <FaFilter />
+              Filters & Sort
+            </button>
+          </div>
         </div>
 
-        {/* Filters Modal */}
+        {/* Desktop Filters Modal */}
         {showFilters && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-8 max-w-2xl w-full mx-4 relative">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 hidden lg:flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-8 max-w-2xl w-full mx-4 relative"
+            >
               <button
                 onClick={() => setShowFilters(false)}
                 className="absolute top-6 right-6 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
@@ -323,9 +379,102 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+
+        {/* Mobile Filters Modal */}
+        <AnimatePresence>
+          {mobileFiltersOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 lg:hidden"
+            >
+              <div 
+                className="absolute inset-0 bg-black/50" 
+                onClick={() => setMobileFiltersOpen(false)} 
+              />
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 30 }}
+                className="absolute right-0 top-0 h-full w-80 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto"
+              >
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold">Filters</h2>
+                    <button onClick={() => setMobileFiltersOpen(false)}>
+                      <FaTimes className="text-gray-500" size={20} />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="p-4 space-y-6">
+                  <div>
+                    <h3 className="font-semibold mb-3 text-gray-700 dark:text-gray-300">Genres</h3>
+                    <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                      <button
+                        onClick={() => handleGenreChange("")}
+                        className={`p-3 rounded-lg text-left transition-all duration-200 text-sm ${
+                          selectedGenre === ""
+                            ? "bg-blue-500 text-white shadow-md"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
+                        All Genres
+                      </button>
+                      {genres.map((genre) => (
+                        <button
+                          key={genre.id}
+                          onClick={() => handleGenreChange(genre.slug)}
+                          className={`p-3 rounded-lg text-left transition-all duration-200 text-sm ${
+                            selectedGenre === genre.slug
+                              ? "bg-blue-500 text-white shadow-md"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                          }`}
+                        >
+                          {genre.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold mb-3 text-gray-700 dark:text-gray-300">Minimum Rating</h3>
+                    <div className="space-y-2">
+                      {[0, 50, 75, 90].map((rating) => (
+                        <button
+                          key={rating}
+                          onClick={() => handleRatingChange(rating)}
+                          className={`w-full p-3 rounded-lg text-left transition-all duration-200 flex items-center justify-between text-sm ${
+                            minRating === rating
+                              ? "bg-yellow-500 text-white shadow-md"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                          }`}
+                        >
+                          <span>{rating === 0 ? "Any Rating" : `${rating}+`}</span>
+                          {rating > 0 && <FaStar className="text-yellow-400" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={clearAllFilters}
+                      className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-semibold transition-all duration-300 hover:from-red-600 hover:to-orange-600"
+                    >
+                      Clear All Filters
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Games Grid */}
         {loading ? (
@@ -344,99 +493,113 @@ const Home = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {games.map((game) => (
-              <Link
+              <motion.div
                 key={game.id}
-                to={`/game/${game.id}`}
-                className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                variants={cardVariants}
+                whileHover="hover"
               >
-                {/* Game Image */}
-                <div className="relative overflow-hidden">
-                  <img
-                    src={
-                      game.background_image ||
-                      "https://via.placeholder.com/400x225/2D3748/FFFFFF?text=No+Image"
-                    }
-                    alt={game.name}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <Link
+                  to={`/game/${game.id}`}
+                  className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 block"
+                >
+                  {/* Game Image */}
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={
+                        game.background_image ||
+                        "https://via.placeholder.com/400x225/2D3748/FFFFFF?text=No+Image"
+                      }
+                      alt={game.name}
+                      className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                  {/* Rating Badge */}
-                  {game.metacritic && (
-                    <div
-                      className={`absolute top-4 right-4 w-12 h-12 rounded-full ${getRatingColor(
-                        game.metacritic
-                      )} flex items-center justify-center text-white font-bold text-sm shadow-lg`}
-                    >
-                      {game.metacritic}
-                    </div>
-                  )}
-                </div>
-
-                {/* Game Info */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-blue-500 transition-colors duration-300 line-clamp-2">
-                    {game.name}
-                  </h3>
-
-                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    {game.released && (
-                      <div className="flex items-center gap-1">
-                        <FaCalendarAlt className="text-blue-500" />
-                        <span>{new Date(game.released).getFullYear()}</span>
-                      </div>
-                    )}
-                    {game.rating && (
-                      <div className="flex items-center gap-1">
-                        <FaStar className="text-yellow-500" />
-                        <span>{game.rating.toFixed(1)}</span>
+                    {/* Rating Badge */}
+                    {game.metacritic && (
+                      <div
+                        className={`absolute top-4 right-4 w-12 h-12 rounded-full ${getRatingColor(
+                          game.metacritic
+                        )} flex items-center justify-center text-white font-bold text-sm shadow-lg`}
+                      >
+                        {game.metacritic}
                       </div>
                     )}
                   </div>
 
-                  {/* Genres */}
-                  {game.genres && game.genres.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {game.genres.slice(0, 2).map((genre) => (
-                        <span
-                          key={genre.id}
-                          className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs"
-                        >
-                          {genre.name}
-                        </span>
-                      ))}
-                      {game.genres.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs">
-                          +{game.genres.length - 2}
-                        </span>
+                  {/* Game Info */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-blue-500 transition-colors duration-300 line-clamp-2">
+                      {game.name}
+                    </h3>
+
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      {game.released && (
+                        <div className="flex items-center gap-1">
+                          <FaCalendarAlt className="text-blue-500" />
+                          <span>{new Date(game.released).getFullYear()}</span>
+                        </div>
+                      )}
+                      {game.rating && (
+                        <div className="flex items-center gap-1">
+                          <FaStar className="text-yellow-500" />
+                          <span>{game.rating.toFixed(1)}</span>
+                        </div>
                       )}
                     </div>
-                  )}
 
-                  {/* Publisher */}
-                  {game.publishers && game.publishers.length > 0 && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 border-t pt-3 mt-3">
-                      <span className="font-semibold">Publisher: </span>
-                      <Link
-                        to={`/publisher/${game.publishers[0].id}`}
-                        className="text-blue-500 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {game.publishers[0].name}
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </Link>
+                    {/* Genres */}
+                    {game.genres && game.genres.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {game.genres.slice(0, 2).map((genre) => (
+                          <span
+                            key={genre.id}
+                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs"
+                          >
+                            {genre.name}
+                          </span>
+                        ))}
+                        {game.genres.length > 2 && (
+                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs">
+                            +{game.genres.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Publisher */}
+                    {game.publishers && game.publishers.length > 0 && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 border-t pt-3 mt-3">
+                        <span className="font-semibold">Publisher: </span>
+                        <Link
+                          to={`/publisher/${game.publishers[0].id}`}
+                          className="text-blue-500 hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {game.publishers[0].name}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
 
         {/* Pagination */}
         {games.length > 0 && (
-          <div className="flex justify-center items-center gap-2 mt-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center items-center gap-2 mt-12"
+          >
             {/* Prev Button */}
             <button
               onClick={handlePrevPage}
@@ -493,13 +656,17 @@ const Home = () => {
               Next
               <FaArrowRight />
             </button>
-          </div>
+          </motion.div>
         )}
       </div>
 
       {/* Empty State */}
       {!loading && games.length === 0 && (
-        <div className="text-center py-16">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center py-16"
+        >
           <FaGamepad className="text-6xl text-gray-400 mx-auto mb-4" />
           <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400 mb-2">
             No games found
@@ -513,7 +680,7 @@ const Home = () => {
           >
             Clear All Filters
           </button>
-        </div>
+        </motion.div>
       )}
 
       <Footer />
