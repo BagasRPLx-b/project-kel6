@@ -1,7 +1,7 @@
 
 ---
 
-````markdown
+
 # 🎮 Project Kelompok 6
 
 ## 📖 Deskripsi
@@ -13,9 +13,9 @@ Aplikasi ini memiliki beberapa halaman seperti Home, Detail Game, Publisher, Sto
 ## 🚀 Tech Stack & Dependencies
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=FFD62E)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Framer Motion](https://img.shields.io/badge/Framer%20Motion-EA4C89?style=for-the-badge&logo=framer&logoColor=white)
-![React Router](https://img.shields.io/badge/React%20Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-EA4C89?style=for-the-badge&logo=framer&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
 
 ### 📦 Dependencies
 - [TailwindCSS](https://tailwindcss.com/) (versi terbaru)
