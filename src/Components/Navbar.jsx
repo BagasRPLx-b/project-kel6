@@ -47,13 +47,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
           {/* Right: Buttons */}
           <div className="flex items-center space-x-4">
             {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setDarkMode((prev) => !prev)}
-              className="hidden sm:flex items-center px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow hover:scale-105 transition-all duration-200 font-medium"
-            >
-              {darkMode ? <Sun size={18} className="mr-2" /> : <Moon size={18} className="mr-2" />}
-              {darkMode ? "Light Mode" : "Dark Mode"}
-            </button>
+     
 
             {/* Profile - Desktop */}
             <Link 
@@ -155,17 +149,6 @@ const Navbar = ({ darkMode, setDarkMode }) => {
                 <p className="text-sm text-gray-500 dark:text-gray-400">View your account</p>
               </div>
             </Link>
-            
-            <button
-              onClick={() => {
-                setDarkMode((prev) => !prev);
-                setIsOpen(false);
-              }}
-              className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 text-gray-700 dark:text-gray-300"
-            >
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-              <span className="font-medium">{darkMode ? "Light Mode" : "Dark Mode"}</span>
-            </button>
           </div>
         </div>
       </div>
