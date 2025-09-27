@@ -84,5 +84,3 @@ npm run dev
 Project ini dibuat untuk keperluan pembelajaran. Tidak untuk penggunaan komersial.
 
 ```
-
----
