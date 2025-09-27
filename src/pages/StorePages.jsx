@@ -152,7 +152,7 @@ const StoresPage = () => {
       )}
 
       {/* stores grid */}
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto px-6 sm:px-8 ">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {[...Array(8)].map((_, i) => (
