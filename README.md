@@ -1,3 +1,8 @@
+Siap 👍 aku buatin full versi **README.md** yang sudah ada badge, fitur, demo section, dan anggota kelompok. Tinggal kamu **copy paste** ke repo kamu. Nanti kamu hanya perlu ganti link Vercel + screenshot sesuai projectmu.
+
+---
+
+````markdown
 # 🎮 Project Kelompok 6
 
 ## 📖 Deskripsi
@@ -10,6 +15,8 @@ Aplikasi ini memiliki beberapa halaman seperti Home, Detail Game, Publisher, Sto
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=FFD62E)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer%20Motion-EA4C89?style=for-the-badge&logo=framer&logoColor=white)
+![React Router](https://img.shields.io/badge/React%20Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
 
 ### 📦 Dependencies
 - [TailwindCSS](https://tailwindcss.com/) (versi terbaru)
@@ -23,31 +30,63 @@ Aplikasi ini memiliki beberapa halaman seperti Home, Detail Game, Publisher, Sto
 ## ⚙️ Cara Menjalankan Project
 
 ### 1. Clone Repository
+```bash
 git clone https://github.com/BagasRPLx-b/project-kel6.git
 cd project-kel6
+````
 
-2. Install Dependencies
+### 2. Install Dependencies
+
+```bash
 npm install
+```
 
-3. Jalankan Project
+### 3. Jalankan Project
+
+```bash
 npm run dev
+```
 
-##✨ Fitur Utama
-🏠 Halaman Home dengan daftar game
-📄 Halaman Detail Game
-🏢 Halaman Publisher
-🏬 Halaman Store
-👤 Halaman Profil
-ℹ️ Halaman About Us + Footer
-📱 Responsive UI dengan TailwindCSS
-🎨 Animasi interaktif menggunakan Framer Motion
-🔗 Navigasi antar halaman dengan React Router
+---
 
-👥 Anggota Kelompok 6
-Bagas Aditya bertanggung jawab pada	Page Home & Detail Game
-Purwa Rizky bertanggung jawab pada	Page Publisher, serta membantu merapikan Page Detail Game
-Naufal Maulana bertanggung jawab pada	Page Store & Profil, serta membantu Sofiya membuat About Us
-Sofiya Dana bertanggung jawab pada Page About Us & Footer
+## ✨ Fitur Utama
 
-📜 License
+* 🏠 Halaman Home dengan daftar game
+* 📄 Halaman Detail Game
+* 🏢 Halaman Publisher
+* 🏬 Halaman Store
+* 👤 Halaman Profil
+* ℹ️ Halaman About Us + Footer
+* 📱 Responsive UI dengan TailwindCSS
+* 🎨 Animasi interaktif menggunakan Framer Motion
+* 🔗 Navigasi antar halaman dengan React Router
+
+---
+
+## 🔥 Demo & Preview
+
+🔗 **Live Demo**: [Klik di sini](project-kel6-pikk.vercel.app)
+
+📸 **Screenshot**:
+
+![Home Page](https://via.placeholder.com/800x400?text=Screenshot+Home+Page)
+![Detail Game](https://via.placeholder.com/800x400?text=Screenshot+Detail+Game)
+![About Us](https://via.placeholder.com/800x400?text=Screenshot+About+Us)
+
+---
+
+## 👥 Anggota Kelompok 6
+
+| Nama               | Tugas                                                 |
+| ------------------ | ----------------------------------------------------- |
+| **Bagas Aditya**   | Page Home & Detail Game                               |
+| **Purwa Rizky**    | Page Publisher, membantu merapikan Page Detail Game   |
+| **Naufal Maulana** | Page Store & Profil, membantu Sofiya membuat About Us |
+| **Sofiya Dana**    | Page About Us & Footer                                |
+
+---
+
+## 📜 License
+
 Project ini dibuat untuk keperluan pembelajaran. Tidak untuk penggunaan komersial.
+
