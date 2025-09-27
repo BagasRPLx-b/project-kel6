@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { ArrowLeft, Calendar, MapPin, GamepadIcon } from "lucide-react";
+import Navbar from "../Components/Navbar";
 
 const PublisherDetail = () => {
   const { id } = useParams();
@@ -87,6 +88,8 @@ const PublisherDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 transition-colors duration-300">
+    <Navbar/>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button */}
         <button

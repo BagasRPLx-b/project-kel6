@@ -2,16 +2,17 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Navbar from "../Components/Navbar";
-import { 
-  FaFilter, 
-  FaTimes, 
-  FaStar, 
+import Footer from "../Components/Footer";
+import {
+  FaFilter,
+  FaTimes,
+  FaStar,
   FaCalendarAlt,
   FaGamepad,
   FaSearch,
   FaFire,
   FaArrowLeft,
-  FaArrowRight
+  FaArrowRight,
 } from "react-icons/fa";
 
 const Home = () => {
@@ -62,7 +63,7 @@ const Home = () => {
   useEffect(() => {
     const filters = [];
     if (selectedGenre) {
-      const genre = genres.find(g => g.slug === selectedGenre);
+      const genre = genres.find((g) => g.slug === selectedGenre);
       if (genre) filters.push(`Genre: ${genre.name}`);
     }
     if (minRating > 0) filters.push(`Rating: ${minRating}+`);
@@ -161,9 +162,10 @@ const Home = () => {
               Discover Your Next Adventure
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-gray-200 font-light">
-              Explore thousands of games across all genres. Find your perfect match with advanced filters and recommendations.
+              Explore thousands of games across all genres. Find your perfect
+              match with advanced filters and recommendations.
             </p>
-            
+
             {/* Search Bar in Hero */}
             <form onSubmit={handleSearchSubmit} className="relative max-w-2xl">
               <div className="relative">
@@ -192,12 +194,17 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-6 mb-6">
           <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">Active Filters:</span>
+              <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                Active Filters:
+              </span>
               <div className="flex flex-wrap gap-2">
                 {activeFilters.map((filter, index) => (
-                  <span key={index} className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm flex items-center gap-2">
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm flex items-center gap-2"
+                  >
                     {filter}
-                    <button 
+                    <button
                       onClick={clearAllFilters}
                       className="hover:text-blue-600 dark:hover:text-blue-300"
                     >
@@ -225,10 +232,12 @@ const Home = () => {
               Featured Games
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {games.length > 0 ? `Showing ${games.length} games` : 'Discover amazing games'}
+              {games.length > 0
+                ? `Showing ${games.length} games`
+                : "Discover amazing games"}
             </p>
           </div>
-          
+
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center gap-3 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg mt-4 md:mt-0"
@@ -252,7 +261,9 @@ const Home = () => {
               <h3 className="text-3xl font-black mb-2 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
                 Filter & Sort Games
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-8">Refine your game discovery</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-8">
+                Refine your game discovery
+              </p>
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
@@ -303,7 +314,9 @@ const Home = () => {
                             : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
                         }`}
                       >
-                        <span>{rating === 0 ? "Any Rating" : `${rating}+`}</span>
+                        <span>
+                          {rating === 0 ? "Any Rating" : `${rating}+`}
+                        </span>
                         {rating > 0 && <FaStar className="text-yellow-400" />}
                       </button>
                     ))}
@@ -318,7 +331,10 @@ const Home = () => {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {[...Array(8)].map((_, index) => (
-              <div key={index} className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg overflow-hidden animate-pulse">
+              <div
+                key={index}
+                className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg overflow-hidden animate-pulse"
+              >
                 <div className="w-full h-48 bg-gray-300 dark:bg-gray-700"></div>
                 <div className="p-6">
                   <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded mb-3"></div>
@@ -338,15 +354,22 @@ const Home = () => {
                 {/* Game Image */}
                 <div className="relative overflow-hidden">
                   <img
-                    src={game.background_image || "https://via.placeholder.com/400x225/2D3748/FFFFFF?text=No+Image"}
+                    src={
+                      game.background_image ||
+                      "https://via.placeholder.com/400x225/2D3748/FFFFFF?text=No+Image"
+                    }
                     alt={game.name}
                     className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
+
                   {/* Rating Badge */}
                   {game.metacritic && (
-                    <div className={`absolute top-4 right-4 w-12 h-12 rounded-full ${getRatingColor(game.metacritic)} flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
+                    <div
+                      className={`absolute top-4 right-4 w-12 h-12 rounded-full ${getRatingColor(
+                        game.metacritic
+                      )} flex items-center justify-center text-white font-bold text-sm shadow-lg`}
+                    >
                       {game.metacritic}
                     </div>
                   )}
@@ -357,7 +380,7 @@ const Home = () => {
                   <h3 className="text-xl font-bold mb-2 group-hover:text-blue-500 transition-colors duration-300 line-clamp-2">
                     {game.name}
                   </h3>
-                  
+
                   <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
                     {game.released && (
                       <div className="flex items-center gap-1">
@@ -377,7 +400,10 @@ const Home = () => {
                   {game.genres && game.genres.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-3">
                       {game.genres.slice(0, 2).map((genre) => (
-                        <span key={genre.id} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs">
+                        <span
+                          key={genre.id}
+                          className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs"
+                        >
                           {genre.name}
                         </span>
                       ))}
@@ -393,7 +419,7 @@ const Home = () => {
                   {game.publishers && game.publishers.length > 0 && (
                     <div className="text-xs text-gray-500 dark:text-gray-400 border-t pt-3 mt-3">
                       <span className="font-semibold">Publisher: </span>
-                      <Link 
+                      <Link
                         to={`/publisher/${game.publishers[0].id}`}
                         className="text-blue-500 hover:underline"
                         onClick={(e) => e.stopPropagation()}
@@ -410,24 +436,59 @@ const Home = () => {
 
         {/* Pagination */}
         {games.length > 0 && (
-          <div className="flex justify-center items-center gap-4 mt-12">
+          <div className="flex justify-center items-center gap-2 mt-12">
+            {/* Prev Button */}
             <button
               onClick={handlePrevPage}
               disabled={page === 1}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 
+                 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed 
+                 transition-all duration-300 shadow-md"
             >
               <FaArrowLeft />
-              Previous
+              Prev
             </button>
-            
-            <span className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold">
-              Page {page} of {pageCount}
-            </span>
-            
+
+            {/* Page Numbers */}
+            {Array.from({ length: pageCount }, (_, i) => i + 1)
+              .filter(
+                (p) =>
+                  p === 1 || // always show first
+                  p === pageCount || // always show last
+                  (p >= page - 2 && p <= page + 2) // show around current
+              )
+              .map((p, index, arr) => {
+                // check if there's a gap between this and previous number
+                const prev = arr[index - 1];
+                if (prev && p - prev > 1) {
+                  return (
+                    <span key={`dots-${p}`} className="px-2 text-gray-500">
+                      ...
+                    </span>
+                  );
+                }
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                      page === p
+                        ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+
+            {/* Next Button */}
             <button
               onClick={handleNextPage}
               disabled={page === pageCount}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 
+                 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed 
+                 transition-all duration-300 shadow-md"
             >
               Next
               <FaArrowRight />
@@ -440,8 +501,12 @@ const Home = () => {
       {!loading && games.length === 0 && (
         <div className="text-center py-16">
           <FaGamepad className="text-6xl text-gray-400 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400 mb-2">No games found</h3>
-          <p className="text-gray-500 dark:text-gray-500 mb-6">Try adjusting your filters or search terms</p>
+          <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400 mb-2">
+            No games found
+          </h3>
+          <p className="text-gray-500 dark:text-gray-500 mb-6">
+            Try adjusting your filters or search terms
+          </p>
           <button
             onClick={clearAllFilters}
             className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
@@ -450,6 +515,8 @@ const Home = () => {
           </button>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };
