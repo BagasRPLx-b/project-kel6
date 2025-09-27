@@ -410,7 +410,7 @@ const Home = () => {
 
         {/* Pagination */}
         {games.length > 0 && (
-          <div className="flex justify-center items-center gap-4 mt-12 mb-8">
+          <div className="flex justify-center items-center gap-4 mt-12">
             <button
               onClick={handlePrevPage}
               disabled={page === 1}
