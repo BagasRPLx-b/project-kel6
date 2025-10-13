@@ -208,17 +208,24 @@ const DetailGame = () => {
     const updatedUser = {
       ...user,
       stats: {
-        ...user.stats,
         gamesPlayed: playedGames,
         favoriteGame: getFavoriteGame(userGameInteractions),
-        hoursPlayed: playedGames * 10 + favoriteGames * 5 // Simulated hours
+        hoursPlayed: playedGames * 10 + favoriteGames * 5, // Simulated hours
+        favoriteCount: favoriteGames,
+        bookmarkCount: bookmarkedGames
       },
       achievements: [...(user.achievements || []), ...newAchievements],
-      badges: generateBadges(userGameInteractions, userCommentCount)
+      badges: generateBadges(userGameInteractions, userCommentCount),
+      level: calculateUserLevel(playedGames, favoriteGames, userCommentCount)
     };
 
     localStorage.setItem("currentUser", JSON.stringify(updatedUser));
     setCurrentUser(updatedUser);
+  };
+
+  const calculateUserLevel = (playedGames, favoriteGames, commentCount) => {
+    const totalXP = (playedGames * 100) + (favoriteGames * 50) + (commentCount * 25);
+    return Math.floor(totalXP / 500) + 1;
   };
 
   const showAchievementPopup = (title, description) => {
@@ -244,6 +251,7 @@ const DetailGame = () => {
     if (playedCount >= 10) badges.push("Veteran");
     if (commentCount >= 5) badges.push("Commentator");
     if (favoriteCount >= 1) badges.push("Fan");
+    if (commentCount >= 10) badges.push("Community Star");
 
     return [...new Set(badges)]; // Remove duplicates
   };
@@ -628,92 +636,103 @@ const DetailGame = () => {
             </div>
           </div>
 
-          {/* Related Games - Right Side (1/3 width) */}
+          {/* Sidebar - Right Side (1/3 width) */}
           <div className="lg:w-1/3">
-            <div className="bg-gray-800 rounded-2xl p-6 sticky top-6">
-              <h2 className="text-2xl font-bold mb-4 flex items-center">
-                <GamepadIcon className="h-6 w-6 mr-2 text-red-400" />
-                Related Games
-              </h2>
-              
-              {relatedLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
-                </div>
-              ) : related.length > 0 ? (
-                <div className="space-y-4">
-                  {related.map((relatedGame) => (
-                    <Link
-                      to={`/game/${relatedGame.id}`}
-                      key={relatedGame.id}
-                      className="block group"
-                    >
-                      <div className="flex gap-3 bg-gray-700 rounded-lg p-3 hover:bg-gray-600 transition duration-200">
-                        <img
-                          src={relatedGame.background_image || '/placeholder-game.jpg'}
-                          alt={relatedGame.name}
-                          className="w-16 h-16 object-cover rounded flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-white truncate group-hover:text-blue-300 transition">
-                            {relatedGame.name}
-                          </h3>
-                          <div className="flex items-center mt-1 text-sm text-gray-400">
-                            {relatedGame.released && (
-                              <span>{new Date(relatedGame.released).getFullYear()}</span>
-                            )}
-                            {relatedGame.rating && (
-                              <>
-                                <span className="mx-2">•</span>
-                                <Star className="h-3 w-3 mr-1 text-yellow-500" />
-                                <span>{relatedGame.rating.toFixed(1)}</span>
-                              </>
-                            )}
+            <div className="space-y-6">
+              {/* Related Games */}
+              <div className="bg-gray-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-4 flex items-center">
+                  <GamepadIcon className="h-6 w-6 mr-2 text-red-400" />
+                  Related Games
+                </h2>
+                
+                {relatedLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+                  </div>
+                ) : related.length > 0 ? (
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {related.map((relatedGame) => (
+                      <Link
+                        to={`/game/${relatedGame.id}`}
+                        key={relatedGame.id}
+                        className="block group"
+                      >
+                        <div className="flex gap-3 bg-gray-700 rounded-lg p-3 hover:bg-gray-600 transition duration-200">
+                          <img
+                            src={relatedGame.background_image || '/placeholder-game.jpg'}
+                            alt={relatedGame.name}
+                            className="w-16 h-16 object-cover rounded flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-white truncate group-hover:text-blue-300 transition">
+                              {relatedGame.name}
+                            </h3>
+                            <div className="flex items-center mt-1 text-sm text-gray-400">
+                              {relatedGame.released && (
+                                <span>{new Date(relatedGame.released).getFullYear()}</span>
+                              )}
+                              {relatedGame.rating && (
+                                <>
+                                  <span className="mx-2">•</span>
+                                  <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                                  <span>{relatedGame.rating.toFixed(1)}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <GamepadIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No related games found</p>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    <GamepadIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No related games found</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Progress */}
+              {currentUser && (
+                <div className="bg-gray-800 rounded-2xl p-6">
+                  <h2 className="text-2xl font-bold mb-4 flex items-center">
+                    <Target className="h-6 w-6 mr-2 text-green-400" />
+                    Your Progress
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Games Played</span>
+                      <span className="text-white font-semibold">{currentUser.stats?.gamesPlayed || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Favorites</span>
+                      <span className="text-white font-semibold">{currentUser.stats?.favoriteCount || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Bookmarks</span>
+                      <span className="text-white font-semibold">{currentUser.stats?.bookmarkCount || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Achievements</span>
+                      <span className="text-white font-semibold">{currentUser.achievements?.length || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Current Level</span>
+                      <span className="text-white font-semibold">Level {currentUser.level || 1}</span>
+                    </div>
+                    <div className="mt-4">
+                      <Link 
+                        to="/profile"
+                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 text-center block"
+                      >
+                        View Full Profile
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Profile Progress */}
-            {currentUser && (
-              <div className="bg-gray-800 rounded-2xl p-6 mt-6">
-                <h2 className="text-2xl font-bold mb-4 flex items-center">
-                  <Target className="h-6 w-6 mr-2 text-green-400" />
-                  Your Progress
-                </h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Games Played</span>
-                    <span className="text-white font-semibold">{currentUser.stats?.gamesPlayed || 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Achievements</span>
-                    <span className="text-white font-semibold">{currentUser.achievements?.length || 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Current Level</span>
-                    <span className="text-white font-semibold">Level {currentUser.level || 1}</span>
-                  </div>
-                  <div className="mt-4">
-                    <Link 
-                      to="/profile"
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 text-center block"
-                    >
-                      View Full Profile
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
