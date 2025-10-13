@@ -12,39 +12,45 @@ import {
   FaFire,
   FaUserEdit,
   FaPalette,
-  FaShieldAlt
+  FaShieldAlt,
+  FaComment
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../Components/Footer";
+import { useNavigate } from "react-router-dom";
 
 const ProfilePage = () => {
-  const [user, setUser] = useState({
-    name: "Naufal Maulana",
-    avatar: "https://i.pravatar.cc/300?img=12",
-    bio: "Gamer & Developer. Loves RPG and Indie games. Always exploring new virtual worlds!",
-    favoriteGenre: "RPG",
-    level: 42,
-    experience: 75,
-    stats: {
-      gamesPlayed: 124,
-      achievements: 57,
-      hoursPlayed: 856,
-      favoriteGame: "Elden Ring"
-    },
-    badges: ["Pro Gamer", "Explorer", "Completionist", "Speedrunner"]
-  });
-
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [editName, setEditName] = useState(false);
   const [editBio, setEditBio] = useState(false);
-  const [nameText, setNameText] = useState(user.name);
-  const [bioText, setBioText] = useState(user.bio);
+  const [nameText, setNameText] = useState("");
+  const [bioText, setBioText] = useState("");
   const [showGenreModal, setShowGenreModal] = useState(false);
   const [genres, setGenres] = useState([]);
   const [loadingGenres, setLoadingGenres] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+  const [userStats, setUserStats] = useState(null);
 
   const API_KEY = "98453db9a240436ba5b62348d213f4a0";
+
+  useEffect(() => {
+    // Check if user is logged in
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) {
+      navigate("/login");
+      return;
+    }
+    
+    const userData = JSON.parse(currentUser);
+    setUser(userData);
+    setNameText(userData.name);
+    setBioText(userData.bio);
+    
+    // Calculate user stats
+    calculateUserStats(userData);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchGenres = async () => {
@@ -64,18 +70,124 @@ const ProfilePage = () => {
     }
   }, [showGenreModal]);
 
+  // Function to calculate user stats based on activities
+  const calculateUserStats = (userData) => {
+    const userComments = JSON.parse(localStorage.getItem("userComments") || "[]");
+    const userGames = JSON.parse(localStorage.getItem("userGames") || "[]");
+    
+    // Filter comments by this user
+    const userCommentCount = userComments.filter(comment => 
+      comment.user?.username === userData.username
+    ).length;
+    
+    // Calculate games played (from comments and favorites)
+    const uniqueGameIds = [...new Set([
+      ...userComments.filter(c => c.user?.username === userData.username).map(c => c.gameId),
+      ...userGames.filter(g => g.userId === userData.id).map(g => g.gameId)
+    ])];
+    
+    const gamesPlayed = uniqueGameIds.length;
+    
+    // Calculate hours played (simulated based on activity)
+    const baseHours = userCommentCount * 2; // Assume 2 hours per comment
+    const hoursPlayed = Math.max(10, baseHours + (gamesPlayed * 5));
+    
+    // Calculate achievements based on activity
+    const achievements = Math.min(50, 
+      Math.floor(userCommentCount / 2) + 
+      Math.floor(gamesPlayed * 3) +
+      (userData.level || 1)
+    );
+    
+    // Calculate level and experience
+    const totalXP = (userCommentCount * 10) + (gamesPlayed * 25) + (achievements * 5);
+    const level = Math.floor(totalXP / 100) + 1;
+    const experience = totalXP % 100;
+    
+    // Determine favorite game from comments
+    const gameComments = userComments.filter(c => c.user?.username === userData.username);
+    const gameCount = {};
+    gameComments.forEach(comment => {
+      gameCount[comment.gameId] = (gameCount[comment.gameId] || 0) + 1;
+    });
+    
+    let favoriteGame = "None";
+    if (Object.keys(gameCount).length > 0) {
+      const mostCommentedGame = Object.keys(gameCount).reduce((a, b) => 
+        gameCount[a] > gameCount[b] ? a : b
+      );
+      // In a real app, you'd fetch the game name from API
+      favoriteGame = `Game #${mostCommentedGame}`;
+    }
+    
+    // Generate badges based on achievements
+    const badges = [];
+    if (level >= 5) badges.push("Pro Gamer");
+    if (gamesPlayed >= 5) badges.push("Explorer");
+    if (achievements >= 10) badges.push("Completionist");
+    if (userCommentCount >= 5) badges.push("Commentator");
+    if (level >= 10) badges.push("Veteran");
+    if (gamesPlayed >= 10) badges.push("Game Hunter");
+    
+    const stats = {
+      gamesPlayed,
+      achievements,
+      hoursPlayed,
+      favoriteGame,
+      comments: userCommentCount,
+      level,
+      experience,
+      badges: badges.length > 0 ? badges : ["Beginner"]
+    };
+    
+    setUserStats(stats);
+    
+    // Update user data with calculated stats
+    const updatedUser = {
+      ...userData,
+      level,
+      experience,
+      stats: {
+        gamesPlayed,
+        achievements,
+        hoursPlayed,
+        favoriteGame
+      },
+      badges: stats.badges
+    };
+    
+    setUser(updatedUser);
+    updateUserData(updatedUser);
+  };
+
+  const updateUserData = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    
+    // Also update in users array if this is a registered user
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const userIndex = users.findIndex(u => u.id === updatedUser.id);
+    if (userIndex !== -1) {
+      users[userIndex] = { ...users[userIndex], ...updatedUser };
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+  };
+
   const handleSaveName = () => {
-    setUser({ ...user, name: nameText });
+    const updatedUser = { ...user, name: nameText };
+    updateUserData(updatedUser);
     setEditName(false);
   };
 
   const handleSaveBio = () => {
-    setUser({ ...user, bio: bioText });
+    const updatedUser = { ...user, bio: bioText };
+    updateUserData(updatedUser);
     setEditBio(false);
   };
 
   const handleGenreClick = (genre) => {
-    setUser({ ...user, favoriteGenre: genre });
+    const updatedUser = { ...user, favoriteGenre: genre };
+    updateUserData(updatedUser);
     setShowGenreModal(false);
   };
 
@@ -84,11 +196,38 @@ const ProfilePage = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setUser({ ...user, avatar: e.target.result });
+        const updatedUser = { ...user, avatar: e.target.result };
+        updateUserData(updatedUser);
       };
       reader.readAsDataURL(file);
     }
     setIsEditingAvatar(false);
+  };
+
+  // Function to generate recent activities from user comments
+  const generateRecentActivities = () => {
+    if (!user) return [];
+    
+    const userComments = JSON.parse(localStorage.getItem("userComments") || "[]")
+      .filter(comment => comment.user?.username === user.username)
+      .slice(0, 4); // Get latest 4 comments
+    
+    const activities = userComments.map((comment, index) => ({
+      type: "comment",
+      text: `Commented on game #${comment.gameId}`,
+      time: comment.timestamp || "Recently",
+      icon: "💬",
+      color: "blue"
+    }));
+    
+    // Add some default activities if user has few comments
+    const defaultActivities = [
+      { type: "welcome", text: "Joined GameFinder", time: "First day", icon: "🎮", color: "green" },
+      { type: "genre", text: `Set favorite genre to ${user.favoriteGenre}`, time: "Recently", icon: "❤️", color: "pink" },
+      { type: "profile", text: "Customized profile", time: "Recently", icon: "👤", color: "purple" }
+    ];
+    
+    return [...activities, ...defaultActivities].slice(0, 4);
   };
 
   // Animation variants
@@ -113,19 +252,26 @@ const ProfilePage = () => {
     }
   };
 
+  if (!user || !userStats) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   const stats = [
-    { icon: FaGamepad, value: user.stats.gamesPlayed, label: "Games Played", color: "from-green-500 to-emerald-500", progress: 100 },
-    { icon: FaTrophy, value: user.stats.achievements, label: "Achievements", color: "from-yellow-500 to-amber-500", progress: 75 },
-    { icon: FaClock, value: user.stats.hoursPlayed, label: "Hours Played", color: "from-blue-500 to-cyan-500", progress: 60 },
-    { icon: FaFire, value: user.level, label: "Player Level", color: "from-purple-500 to-pink-500", progress: user.experience }
+    { icon: FaGamepad, value: user.stats.gamesPlayed, label: "Games Played", color: "from-green-500 to-emerald-500", progress: Math.min(100, (user.stats.gamesPlayed / 20) * 100) },
+    { icon: FaTrophy, value: user.stats.achievements, label: "Achievements", color: "from-yellow-500 to-amber-500", progress: Math.min(100, (user.stats.achievements / 50) * 100) },
+    { icon: FaClock, value: user.stats.hoursPlayed, label: "Hours Played", color: "from-blue-500 to-cyan-500", progress: Math.min(100, (user.stats.hoursPlayed / 200) * 100) },
+    { icon: FaComment, value: userStats.comments, label: "Comments", color: "from-purple-500 to-pink-500", progress: Math.min(100, (userStats.comments / 10) * 100) },
+    { icon: FaFire, value: user.level, label: "Player Level", color: "from-orange-500 to-red-500", progress: user.experience }
   ];
 
-  const recentActivities = [
-    { type: "game", text: "Completed Elden Ring DLC", time: "2 hours ago", icon: "🎮", color: "green" },
-    { type: "achievement", text: "Unlocked 'Dragon Slayer' achievement", time: "1 day ago", icon: "🏆", color: "yellow" },
-    { type: "genre", text: "Explored new RPG games", time: "3 days ago", icon: "🔍", color: "blue" },
-    { type: "milestone", text: "Reached 1000 hours total playtime", time: "1 week ago", icon: "⭐", color: "purple" }
-  ];
+  const recentActivities = generateRecentActivities();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -243,6 +389,19 @@ const ProfilePage = () => {
                     <FaEdit className="text-white/70 hover:text-white transition-colors" />
                   </motion.p>
                 )}
+              </div>
+
+              {/* Stats Summary */}
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start mb-4">
+                <div className="bg-white/20 px-4 py-2 rounded-lg backdrop-blur-md">
+                  <span className="text-white font-semibold">{user.stats.gamesPlayed} Games</span>
+                </div>
+                <div className="bg-white/20 px-4 py-2 rounded-lg backdrop-blur-md">
+                  <span className="text-white font-semibold">{user.stats.achievements} Achievements</span>
+                </div>
+                <div className="bg-white/20 px-4 py-2 rounded-lg backdrop-blur-md">
+                  <span className="text-white font-semibold">{userStats.comments} Comments</span>
+                </div>
               </div>
 
               {/* Favorite Genre */}
@@ -389,16 +548,40 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* Favorite Game */}
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <FaHeart className="text-red-500" />
-                  Favorite Game
-                </h3>
-                <div className="text-center p-4">
-                  <div className="text-4xl mb-2">🎮</div>
-                  <div className="text-2xl font-bold text-gray-800 dark:text-white">{user.stats.favoriteGame}</div>
-                  <div className="text-gray-600 dark:text-gray-400">Most played game this month</div>
+              {/* Favorite Game & Progress */}
+              <div className="space-y-6">
+                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl">
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <FaHeart className="text-red-500" />
+                    Favorite Game
+                  </h3>
+                  <div className="text-center p-4">
+                    <div className="text-4xl mb-2">🎮</div>
+                    <div className="text-2xl font-bold text-gray-800 dark:text-white">{user.stats.favoriteGame}</div>
+                    <div className="text-gray-600 dark:text-gray-400">Based on your activity</div>
+                  </div>
+                </div>
+
+                {/* Level Progress */}
+                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl">
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <FaFire className="text-orange-500" />
+                    Level Progress
+                  </h3>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Level {user.level}</div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                      <motion.div 
+                        className="h-full rounded-full bg-gradient-to-r from-orange-500 to-red-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${user.experience}%` }}
+                        transition={{ duration: 1.5 }}
+                      />
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                      {user.experience}/100 XP to next level
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -422,14 +605,24 @@ const ProfilePage = () => {
                   className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20 dark:border-gray-700/50"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`text-3xl bg-gradient-to-r from-${activity.color}-500 to-${activity.color}-600 rounded-2xl w-16 h-16 flex items-center justify-center`}>
+                    <div className={`text-3xl rounded-2xl w-16 h-16 flex items-center justify-center ${
+                      activity.color === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
+                      activity.color === 'blue' ? 'bg-gradient-to-r from-blue-500 to-cyan-600' :
+                      activity.color === 'pink' ? 'bg-gradient-to-r from-pink-500 to-rose-600' :
+                      'bg-gradient-to-r from-purple-500 to-pink-600'
+                    }`}>
                       {activity.icon}
                     </div>
                     <div className="flex-1">
                       <div className="font-bold text-lg">{activity.text}</div>
                       <div className="text-gray-500 dark:text-gray-400 text-sm">{activity.time}</div>
                     </div>
-                    <div className={`w-3 h-3 bg-${activity.color}-500 rounded-full animate-pulse`}></div>
+                    <div className={`w-3 h-3 rounded-full animate-pulse ${
+                      activity.color === 'green' ? 'bg-green-500' :
+                      activity.color === 'blue' ? 'bg-blue-500' :
+                      activity.color === 'pink' ? 'bg-pink-500' :
+                      'bg-purple-500'
+                    }`}></div>
                   </div>
                 </motion.div>
               ))}

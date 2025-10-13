@@ -1,9 +1,32 @@
-import React, { useState } from "react";
-import { Moon, Sun, Menu, X, Home, ShoppingBag, Users, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Moon, Sun, Menu, X, Home, ShoppingBag, Users, User, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = ({ darkMode, setDarkMode }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is logged in
+    const user = localStorage.getItem("currentUser");
+    if (user) {
+      setCurrentUser(JSON.parse(user));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+    setIsOpen(false);
+    navigate("/");
+    window.location.reload(); // Refresh to trigger login page
+  };
+
+  const getCurrentUser = () => {
+    const user = localStorage.getItem("currentUser");
+    return user ? JSON.parse(user) : null;
+  };
 
   return (
     <>
@@ -12,9 +35,11 @@ const Navbar = ({ darkMode, setDarkMode }) => {
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
           {/* Left: Logo */}
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              GameFinder
-            </h1>
+            <Link to="/" className="flex items-center">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                GameFinder
+              </h1>
+            </Link>
           </div>
 
           {/* Middle: Navigation Menu - Desktop */}
@@ -47,16 +72,44 @@ const Navbar = ({ darkMode, setDarkMode }) => {
           {/* Right: Buttons */}
           <div className="flex items-center space-x-4">
             {/* Dark Mode Toggle */}
-     
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+            >
+              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
 
             {/* Profile - Desktop */}
-            <Link 
-              to="/profile" 
-              className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 font-medium"
-            >
-              <User size={18} />
-              <span>Profile</span>
-            </Link>
+            {currentUser ? (
+              <div className="hidden md:flex items-center space-x-3">
+                <Link 
+                  to="/profile" 
+                  className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 font-medium"
+                >
+                  <img 
+                    src={currentUser.avatar} 
+                    alt={currentUser.name}
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <span>{currentUser.name}</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                  title="Logout"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <Link 
+                to="/login" 
+                className="hidden md:flex items-center space-x-2 bg-blue-600 text-white rounded-full px-4 py-2 hover:bg-blue-700 transition-colors duration-200 font-medium"
+              >
+                <User size={18} />
+                <span>Login</span>
+              </Link>
+            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -136,19 +189,48 @@ const Navbar = ({ darkMode, setDarkMode }) => {
 
           {/* Bottom Section */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <Link 
-              to="/profile"
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 mb-3"
-              onClick={() => setIsOpen(false)}
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                <User size={20} className="text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-800 dark:text-gray-200">Profile</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">View your account</p>
-              </div>
-            </Link>
+            {currentUser ? (
+              <>
+                <Link 
+                  to="/profile"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 mb-3"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={currentUser.avatar} 
+                      alt={currentUser.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-200">{currentUser.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">View your profile</p>
+                  </div>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-red-100 dark:hover:bg-red-900 transition-colors duration-200 text-red-600 dark:text-red-400"
+                >
+                  <LogOut size={20} />
+                  <span className="font-medium">Logout</span>
+                </button>
+              </>
+            ) : (
+              <Link 
+                to="/login"
+                className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 mb-3"
+                onClick={() => setIsOpen(false)}
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                  <User size={20} className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 dark:text-gray-200">Login</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Sign in to your account</p>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

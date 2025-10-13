@@ -1,22 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
+import ActiveFilters from "../Components/Filters/ActiveFilters";
+import FilterModal from "../Components/Filters/FilterModal";
+import MobileFilterModal from "../Components/Filters/MobileFilterModal";
+import GamesGrid from "../Components/Games/GamesGrid";
+import Pagination from "../Components/Pagination";
 import {
   FaFilter,
-  FaTimes,
-  FaStar,
-  FaCalendarAlt,
-  FaGamepad,
   FaSearch,
-  FaFire,
-  FaArrowLeft,
-  FaArrowRight,
-  FaDesktop,
-  FaShoppingCart,
+  FaGamepad,
 } from "react-icons/fa";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const Home = () => {
   const [games, setGames] = useState([]);
@@ -84,19 +80,11 @@ const Home = () => {
         url.searchParams.append("key", API_KEY);
         url.searchParams.append("page", page);
         url.searchParams.append("page_size", pageSize);
-        url.searchParams.append("ordering", "-added"); // Sort by newest first
+        url.searchParams.append("ordering", "-added");
 
-        if (searchTerm) {
-          url.searchParams.append("search", searchTerm);
-        }
-
-        if (selectedGenre) {
-          url.searchParams.append("genres", selectedGenre);
-        }
-
-        if (minRating > 0) {
-          url.searchParams.append("metacritic", `${minRating},100`);
-        }
+        if (searchTerm) url.searchParams.append("search", searchTerm);
+        if (selectedGenre) url.searchParams.append("genres", selectedGenre);
+        if (minRating > 0) url.searchParams.append("metacritic", `${minRating},100`);
 
         const response = await axios.get(url.toString());
         setGames(response.data.results);
@@ -133,50 +121,12 @@ const Home = () => {
     setPage(1);
   };
 
-  // Pagination handlers
-  const handleNextPage = () => setPage((prevPage) => prevPage + 1);
-  const handlePrevPage = () => setPage((prevPage) => Math.max(1, prevPage - 1));
+  const handlePageChange = (newPage) => setPage(newPage);
 
   // Search form submission
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setPage(1);
-  };
-
-  const getRatingColor = (rating) => {
-    if (!rating) return "bg-gray-500";
-    if (rating >= 75) return "bg-green-500";
-    if (rating >= 50) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5
-      }
-    },
-    hover: {
-      y: -5,
-      scale: 1.02,
-      transition: {
-        duration: 0.3
-      }
-    }
   };
 
   return (
@@ -187,7 +137,7 @@ const Home = () => {
       <section className="relative rounded-3xl overflow-hidden mx-4 my-8 shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent z-10"></div>
         <img
-          src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+          src="https://rogcommunity.id/wp-content/uploads/2023/09/wallpaperflare.com_wallpaper-scaled.jpg"
           alt="Gaming Banner"
           className="w-full h-96 object-cover"
         />
@@ -225,39 +175,7 @@ const Home = () => {
       </section>
 
       {/* Active Filters */}
-      {activeFilters.length > 0 && (
-        <div className="max-w-7xl mx-auto px-6 mb-6">
-          <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Active Filters:
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {activeFilters.map((filter, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm flex items-center gap-2"
-                  >
-                    {filter}
-                    <button
-                      onClick={clearAllFilters}
-                      className="hover:text-blue-600 dark:hover:text-blue-300"
-                    >
-                      <FaTimes size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-            <button
-              onClick={clearAllFilters}
-              className="text-sm text-red-500 hover:text-red-600 font-semibold"
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
-      )}
+      <ActiveFilters activeFilters={activeFilters} onClearAll={clearAllFilters} />
 
       <div className="max-w-7xl mx-auto px-6">
         {/* Header with Stats and Filter Button */}
@@ -273,7 +191,7 @@ const Home = () => {
             </p>
           </div>
 
-          {/* Mobile Filter Button */}
+          {/* Filter Buttons */}
           <div className="flex gap-4 mt-4 md:mt-0">
             <button
               onClick={() => setMobileFiltersOpen(true)}
@@ -293,395 +211,64 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Desktop Filters Modal */}
-        {showFilters && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 hidden lg:flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-8 max-w-2xl w-full mx-4 relative"
-            >
-              <button
-                onClick={() => setShowFilters(false)}
-                className="absolute top-6 right-6 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-              >
-                <FaTimes size={28} />
-              </button>
+        {/* Filter Modals */}
+        <FilterModal
+          isOpen={showFilters}
+          onClose={() => setShowFilters(false)}
+          genres={genres}
+          selectedGenre={selectedGenre}
+          onGenreChange={handleGenreChange}
+          minRating={minRating}
+          onRatingChange={handleRatingChange}
+          onClearAll={clearAllFilters}
+        />
 
-              <h3 className="text-3xl font-black mb-2 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                Filter & Sort Games
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-8">
-                Refine your game discovery
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <FaGamepad className="text-blue-500" />
-                    Genres
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
-                    <button
-                      onClick={() => handleGenreChange("")}
-                      className={`p-3 rounded-xl text-left transition-all duration-300 ${
-                        selectedGenre === ""
-                          ? "bg-blue-500 text-white shadow-lg"
-                          : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                      }`}
-                    >
-                      All Genres
-                    </button>
-                    {genres.map((genre) => (
-                      <button
-                        key={genre.id}
-                        onClick={() => handleGenreChange(genre.slug)}
-                        className={`p-3 rounded-xl text-left transition-all duration-300 ${
-                          selectedGenre === genre.slug
-                            ? "bg-blue-500 text-white shadow-lg"
-                            : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        {genre.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <FaStar className="text-yellow-500" />
-                    Minimum Rating
-                  </h4>
-                  <div className="space-y-3">
-                    {[0, 50, 75, 90].map((rating) => (
-                      <button
-                        key={rating}
-                        onClick={() => handleRatingChange(rating)}
-                        className={`w-full p-3 rounded-xl text-left transition-all duration-300 flex items-center justify-between ${
-                          minRating === rating
-                            ? "bg-yellow-500 text-white shadow-lg"
-                            : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        <span>
-                          {rating === 0 ? "Any Rating" : `${rating}+`}
-                        </span>
-                        {rating > 0 && <FaStar className="text-yellow-400" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Mobile Filters Modal */}
-        <AnimatePresence>
-          {mobileFiltersOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 lg:hidden"
-            >
-              <div 
-                className="absolute inset-0 bg-black/50" 
-                onClick={() => setMobileFiltersOpen(false)} 
-              />
-              <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 30 }}
-                className="absolute right-0 top-0 h-full w-80 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto"
-              >
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold">Filters</h2>
-                    <button onClick={() => setMobileFiltersOpen(false)}>
-                      <FaTimes className="text-gray-500" size={20} />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="p-4 space-y-6">
-                  <div>
-                    <h3 className="font-semibold mb-3 text-gray-700 dark:text-gray-300">Genres</h3>
-                    <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                      <button
-                        onClick={() => handleGenreChange("")}
-                        className={`p-3 rounded-lg text-left transition-all duration-200 text-sm ${
-                          selectedGenre === ""
-                            ? "bg-blue-500 text-white shadow-md"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                        }`}
-                      >
-                        All Genres
-                      </button>
-                      {genres.map((genre) => (
-                        <button
-                          key={genre.id}
-                          onClick={() => handleGenreChange(genre.slug)}
-                          className={`p-3 rounded-lg text-left transition-all duration-200 text-sm ${
-                            selectedGenre === genre.slug
-                              ? "bg-blue-500 text-white shadow-md"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                          }`}
-                        >
-                          {genre.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold mb-3 text-gray-700 dark:text-gray-300">Minimum Rating</h3>
-                    <div className="space-y-2">
-                      {[0, 50, 75, 90].map((rating) => (
-                        <button
-                          key={rating}
-                          onClick={() => handleRatingChange(rating)}
-                          className={`w-full p-3 rounded-lg text-left transition-all duration-200 flex items-center justify-between text-sm ${
-                            minRating === rating
-                              ? "bg-yellow-500 text-white shadow-md"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                          }`}
-                        >
-                          <span>{rating === 0 ? "Any Rating" : `${rating}+`}</span>
-                          {rating > 0 && <FaStar className="text-yellow-400" />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={clearAllFilters}
-                      className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-semibold transition-all duration-300 hover:from-red-600 hover:to-orange-600"
-                    >
-                      Clear All Filters
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <MobileFilterModal
+          isOpen={mobileFiltersOpen}
+          onClose={() => setMobileFiltersOpen(false)}
+          genres={genres}
+          selectedGenre={selectedGenre}
+          onGenreChange={handleGenreChange}
+          minRating={minRating}
+          onRatingChange={handleRatingChange}
+          onClearAll={clearAllFilters}
+        />
 
         {/* Games Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {[...Array(8)].map((_, index) => (
-              <div
-                key={index}
-                className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg overflow-hidden animate-pulse"
-              >
-                <div className="w-full h-48 bg-gray-300 dark:bg-gray-700"></div>
-                <div className="p-6">
-                  <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded mb-3"></div>
-                  <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {games.map((game) => (
-              <motion.div
-                key={game.id}
-                variants={cardVariants}
-                whileHover="hover"
-              >
-                <Link
-                  to={`/game/${game.id}`}
-                  className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 block"
-                >
-                  {/* Game Image */}
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={
-                        game.background_image ||
-                        "https://via.placeholder.com/400x225/2D3748/FFFFFF?text=No+Image"
-                      }
-                      alt={game.name}
-                      className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                    {/* Rating Badge */}
-                    {game.metacritic && (
-                      <div
-                        className={`absolute top-4 right-4 w-12 h-12 rounded-full ${getRatingColor(
-                          game.metacritic
-                        )} flex items-center justify-center text-white font-bold text-sm shadow-lg`}
-                      >
-                        {game.metacritic}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Game Info */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-blue-500 transition-colors duration-300 line-clamp-2">
-                      {game.name}
-                    </h3>
-
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      {game.released && (
-                        <div className="flex items-center gap-1">
-                          <FaCalendarAlt className="text-blue-500" />
-                          <span>{new Date(game.released).getFullYear()}</span>
-                        </div>
-                      )}
-                      {game.rating && (
-                        <div className="flex items-center gap-1">
-                          <FaStar className="text-yellow-500" />
-                          <span>{game.rating.toFixed(1)}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Genres */}
-                    {game.genres && game.genres.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {game.genres.slice(0, 2).map((genre) => (
-                          <span
-                            key={genre.id}
-                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs"
-                          >
-                            {genre.name}
-                          </span>
-                        ))}
-                        {game.genres.length > 2 && (
-                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs">
-                            +{game.genres.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Publisher */}
-                    {game.publishers && game.publishers.length > 0 && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400 border-t pt-3 mt-3">
-                        <span className="font-semibold">Publisher: </span>
-                        <Link
-                          to={`/publisher/${game.publishers[0].id}`}
-                          className="text-blue-500 hover:underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {game.publishers[0].name}
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+        <GamesGrid games={games} loading={loading} />
 
         {/* Pagination */}
         {games.length > 0 && (
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={handlePageChange}
+          />
+        )}
+
+        {/* Empty State */}
+        {!loading && games.length === 0 && (
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-center items-center gap-2 mt-12"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center py-16"
           >
-            {/* Prev Button */}
+            <FaGamepad className="text-6xl text-gray-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400 mb-2">
+              No games found
+            </h3>
+            <p className="text-gray-500 dark:text-gray-500 mb-6">
+              Try adjusting your filters or search terms
+            </p>
             <button
-              onClick={handlePrevPage}
-              disabled={page === 1}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 
-                 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed 
-                 transition-all duration-300 shadow-md"
+              onClick={clearAllFilters}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
             >
-              <FaArrowLeft />
-              Prev
-            </button>
-
-            {/* Page Numbers */}
-            {Array.from({ length: pageCount }, (_, i) => i + 1)
-              .filter(
-                (p) =>
-                  p === 1 || // always show first
-                  p === pageCount || // always show last
-                  (p >= page - 2 && p <= page + 2) // show around current
-              )
-              .map((p, index, arr) => {
-                // check if there's a gap between this and previous number
-                const prev = arr[index - 1];
-                if (prev && p - prev > 1) {
-                  return (
-                    <span key={`dots-${p}`} className="px-2 text-gray-500">
-                      ...
-                    </span>
-                  );
-                }
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                      page === p
-                        ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-
-            {/* Next Button */}
-            <button
-              onClick={handleNextPage}
-              disabled={page === pageCount}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 
-                 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed 
-                 transition-all duration-300 shadow-md"
-            >
-              Next
-              <FaArrowRight />
+              Clear All Filters
             </button>
           </motion.div>
         )}
       </div>
-
-      {/* Empty State */}
-      {!loading && games.length === 0 && (
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center py-16"
-        >
-          <FaGamepad className="text-6xl text-gray-400 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400 mb-2">
-            No games found
-          </h3>
-          <p className="text-gray-500 dark:text-gray-500 mb-6">
-            Try adjusting your filters or search terms
-          </p>
-          <button
-            onClick={clearAllFilters}
-            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
-          >
-            Clear All Filters
-          </button>
-        </motion.div>
-      )}
 
       <Footer />
     </div>

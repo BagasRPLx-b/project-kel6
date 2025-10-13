@@ -11,9 +11,15 @@ import {
   Clock,
   GamepadIcon,
   MapPin,
-  ExternalLink
+  ExternalLink,
+  Heart,
+  Bookmark,
+  Play,
+  Trophy,
+  Target
 } from "lucide-react";
 import Footer from "../Components/Footer";
+import { motion, AnimatePresence } from "framer-motion";
 
 const DetailGame = () => {
   const { id } = useParams();
@@ -25,10 +31,26 @@ const DetailGame = () => {
   const [commentInput, setCommentInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [relatedLoading, setRelatedLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userInteractions, setUserInteractions] = useState({
+    isFavorite: false,
+    isBookmarked: false,
+    hasPlayed: false,
+    rating: 0
+  });
+  const [showAchievement, setShowAchievement] = useState(null);
 
   const API_KEY = "98453db9a240436ba5b62348d213f4a0";
 
   useEffect(() => {
+    // Check if user is logged in
+    const user = localStorage.getItem("currentUser");
+    if (user) {
+      const userData = JSON.parse(user);
+      setCurrentUser(userData);
+      loadUserInteractions(userData.id, parseInt(id));
+    }
+
     const fetchGameDetail = async () => {
       setLoading(true);
       try {
@@ -52,35 +74,28 @@ const DetailGame = () => {
       
       try {
         setRelatedLoading(true);
-        // Multiple strategies to get related games
         let relatedRes;
         
-        // Try by genres first
         if (game.genres && game.genres.length > 0) {
           const genreIds = game.genres.map(genre => genre.id).join(',');
           relatedRes = await axios.get(
             `https://api.rawg.io/api/games?key=${API_KEY}&genres=${genreIds}&page_size=6`
           );
-        } 
-        // Fallback to tags
-        else if (game.tags && game.tags.length > 0) {
+        } else if (game.tags && game.tags.length > 0) {
           const tagIds = game.tags.slice(0, 3).map(tag => tag.id).join(',');
           relatedRes = await axios.get(
             `https://api.rawg.io/api/games?key=${API_KEY}&tags=${tagIds}&page_size=6`
           );
-        }
-        // Final fallback - popular games
-        else {
+        } else {
           relatedRes = await axios.get(
             `https://api.rawg.io/api/games?key=${API_KEY}&ordering=-rating&page_size=6`
           );
         }
         
-        // Filter out the current game from related results
         const filteredRelated = relatedRes.data.results.filter(relatedGame => 
           relatedGame.id !== game.id
         );
-        setRelated(filteredRelated.slice(0, 5)); // Show max 5 related games
+        setRelated(filteredRelated.slice(0, 5));
       } catch (error) {
         console.error("Failed to fetch related games:", error);
       } finally {
@@ -93,11 +108,185 @@ const DetailGame = () => {
     }
   }, [game]);
 
+  // Load comments from localStorage
+  useEffect(() => {
+    if (game) {
+      const gameComments = getUserComments(game.id);
+      setComments(gameComments);
+    }
+  }, [game, id]);
+
+  const loadUserInteractions = (userId, gameId) => {
+    const userGames = JSON.parse(localStorage.getItem("userGames") || "[]");
+    const interactions = userGames.find(ug => ug.userId === userId && ug.gameId === gameId);
+    
+    if (interactions) {
+      setUserInteractions({
+        isFavorite: interactions.isFavorite || false,
+        isBookmarked: interactions.isBookmarked || false,
+        hasPlayed: interactions.hasPlayed || false,
+        rating: interactions.rating || 0
+      });
+    }
+  };
+
+  const saveUserInteraction = (interactionType, value = true) => {
+    if (!currentUser) {
+      alert("Please login to interact with games");
+      return;
+    }
+
+    const userGames = JSON.parse(localStorage.getItem("userGames") || "[]");
+    const existingIndex = userGames.findIndex(
+      ug => ug.userId === currentUser.id && ug.gameId === parseInt(id)
+    );
+
+    const interactionData = {
+      userId: currentUser.id,
+      gameId: parseInt(id),
+      gameName: game?.name,
+      gameImage: game?.background_image,
+      timestamp: new Date().toISOString(),
+      [interactionType]: value
+    };
+
+    if (existingIndex !== -1) {
+      userGames[existingIndex] = { ...userGames[existingIndex], ...interactionData };
+    } else {
+      userGames.push(interactionData);
+    }
+
+    localStorage.setItem("userGames", JSON.stringify(userGames));
+    setUserInteractions(prev => ({ ...prev, [interactionType]: value }));
+
+    // Update user stats and check for achievements
+    updateUserStats(interactionType);
+  };
+
+  const updateUserStats = (interactionType) => {
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (!user) return;
+
+    const userGames = JSON.parse(localStorage.getItem("userGames") || "[]");
+    const userComments = JSON.parse(localStorage.getItem("userComments") || "[]");
+    
+    const userGameInteractions = userGames.filter(ug => ug.userId === user.id);
+    const userCommentCount = userComments.filter(comment => 
+      comment.user?.username === user.username
+    ).length;
+
+    // Calculate new stats
+    const favoriteGames = userGameInteractions.filter(ug => ug.isFavorite).length;
+    const playedGames = userGameInteractions.filter(ug => ug.hasPlayed).length;
+    const bookmarkedGames = userGameInteractions.filter(ug => ug.isBookmarked).length;
+
+    let newAchievements = [];
+
+    // Check for achievements based on interactions
+    if (interactionType === 'isFavorite' && favoriteGames === 1) {
+      newAchievements.push("First Favorite");
+      showAchievementPopup("First Favorite", "You favorited your first game! 🎮");
+    }
+    if (interactionType === 'hasPlayed' && playedGames === 1) {
+      newAchievements.push("First Play");
+      showAchievementPopup("First Play", "You marked your first game as played! 🎯");
+    }
+    if (interactionType === 'isBookmarked' && bookmarkedGames === 1) {
+      newAchievements.push("Bookmark Collector");
+      showAchievementPopup("Bookmark Collector", "You bookmarked your first game! 📚");
+    }
+    if (favoriteGames >= 3 && !user.achievements?.includes("Game Lover")) {
+      newAchievements.push("Game Lover");
+      showAchievementPopup("Game Lover", "You've favorited 3 games! ❤️");
+    }
+    if (playedGames >= 5 && !user.achievements?.includes("Seasoned Gamer")) {
+      newAchievements.push("Seasoned Gamer");
+      showAchievementPopup("Seasoned Gamer", "You've played 5 games! 🏆");
+    }
+
+    // Update user stats
+    const updatedUser = {
+      ...user,
+      stats: {
+        ...user.stats,
+        gamesPlayed: playedGames,
+        favoriteGame: getFavoriteGame(userGameInteractions),
+        hoursPlayed: playedGames * 10 + favoriteGames * 5 // Simulated hours
+      },
+      achievements: [...(user.achievements || []), ...newAchievements],
+      badges: generateBadges(userGameInteractions, userCommentCount)
+    };
+
+    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    setCurrentUser(updatedUser);
+  };
+
+  const showAchievementPopup = (title, description) => {
+    setShowAchievement({ title, description });
+    setTimeout(() => setShowAchievement(null), 4000);
+  };
+
+  const getFavoriteGame = (userGames) => {
+    const favoriteGames = userGames.filter(ug => ug.isFavorite);
+    if (favoriteGames.length > 0) {
+      return favoriteGames[favoriteGames.length - 1].gameName;
+    }
+    return "None";
+  };
+
+  const generateBadges = (userGames, commentCount) => {
+    const badges = ["Beginner"];
+    const favoriteCount = userGames.filter(ug => ug.isFavorite).length;
+    const playedCount = userGames.filter(ug => ug.hasPlayed).length;
+
+    if (favoriteCount >= 3) badges.push("Game Lover");
+    if (playedCount >= 5) badges.push("Explorer");
+    if (playedCount >= 10) badges.push("Veteran");
+    if (commentCount >= 5) badges.push("Commentator");
+    if (favoriteCount >= 1) badges.push("Fan");
+
+    return [...new Set(badges)]; // Remove duplicates
+  };
+
+  const getCurrentUser = () => {
+    const user = localStorage.getItem("currentUser");
+    return user ? JSON.parse(user) : null;
+  };
+
+  const getUserComments = (gameId) => {
+    const comments = localStorage.getItem("userComments");
+    if (!comments) return [];
+    
+    const allComments = JSON.parse(comments);
+    return allComments.filter(comment => comment.gameId === parseInt(gameId));
+  };
+
+  const saveUserComment = (comment) => {
+    const comments = localStorage.getItem("userComments");
+    const allComments = comments ? JSON.parse(comments) : [];
+    
+    const newComment = {
+      ...comment,
+      gameId: parseInt(id),
+      id: Date.now()
+    };
+    
+    allComments.push(newComment);
+    localStorage.setItem("userComments", JSON.stringify(allComments));
+    return newComment;
+  };
+
   const handleAddComment = (e) => {
     e.preventDefault();
     if (!commentInput.trim()) return;
+    
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      alert("Please login to comment");
+      return;
+    }
+
     const newComment = {
-      id: Date.now(),
       text: commentInput,
       timestamp: new Date().toLocaleDateString('en-US', {
         year: 'numeric',
@@ -105,10 +294,32 @@ const DetailGame = () => {
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
-      })
+      }),
+      user: {
+        username: currentUser.username,
+        name: currentUser.name,
+        avatar: currentUser.avatar
+      }
     };
-    setComments([newComment, ...comments]);
+
+    const savedComment = saveUserComment(newComment);
+    setComments([savedComment, ...comments]);
     setCommentInput("");
+
+    // Update stats for commenting
+    updateUserStats('comment');
+    
+    // Check for comment achievement
+    const userComments = JSON.parse(localStorage.getItem("userComments") || "[]");
+    const userCommentCount = userComments.filter(comment => 
+      comment.user?.username === currentUser.username
+    ).length;
+
+    if (userCommentCount === 1) {
+      showAchievementPopup("First Comment", "You posted your first comment! 💬");
+    } else if (userCommentCount === 5) {
+      showAchievementPopup("Active Commentator", "You've made 5 comments! 🎤");
+    }
   };
 
   const formatPlaytime = (minutes) => {
@@ -155,6 +366,25 @@ const DetailGame = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 transition-colors duration-300">
       <Navbar/>
+      
+      {/* Achievement Popup */}
+      <AnimatePresence>
+        {showAchievement && (
+          <motion.div
+            initial={{ opacity: 0, y: -100, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -100, scale: 0.8 }}
+            className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 shadow-2xl border-2 border-yellow-300 max-w-md w-full mx-4"
+          >
+            <div className="text-center">
+              <Trophy className="h-12 w-12 text-white mx-auto mb-2" />
+              <h3 className="text-xl font-bold text-white mb-1">{showAchievement.title}</h3>
+              <p className="text-white/90">{showAchievement.description}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Back Button */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <button 
@@ -167,7 +397,7 @@ const DetailGame = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content - Left Side (2/3 width) */}
           <div className="lg:w-2/3">
-            {/* Game Header */}
+            {/* Game Header with Interaction Buttons */}
             <div className="bg-gray-800 rounded-2xl shadow-xl overflow-hidden mb-8">
               <div 
                 className="h-80 bg-cover bg-center relative"
@@ -197,6 +427,84 @@ const DetailGame = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Interaction Buttons */}
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => saveUserInteraction('isFavorite', !userInteractions.isFavorite)}
+                    className={`p-3 rounded-full backdrop-blur-md transition-all ${
+                      userInteractions.isFavorite 
+                        ? 'bg-red-500 text-white' 
+                        : 'bg-white/20 text-white hover:bg-white/30'
+                    }`}
+                  >
+                    <Heart className={`h-5 w-5 ${userInteractions.isFavorite ? 'fill-current' : ''}`} />
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => saveUserInteraction('isBookmarked', !userInteractions.isBookmarked)}
+                    className={`p-3 rounded-full backdrop-blur-md transition-all ${
+                      userInteractions.isBookmarked 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-white/20 text-white hover:bg-white/30'
+                    }`}
+                  >
+                    <Bookmark className={`h-5 w-5 ${userInteractions.isBookmarked ? 'fill-current' : ''}`} />
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => saveUserInteraction('hasPlayed', !userInteractions.hasPlayed)}
+                    className={`p-3 rounded-full backdrop-blur-md transition-all ${
+                      userInteractions.hasPlayed 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-white/20 text-white hover:bg-white/30'
+                    }`}
+                  >
+                    <Play className="h-5 w-5" />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+
+            {/* Interaction Status */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className={`bg-gray-800 rounded-xl p-4 text-center transition-all ${
+                userInteractions.isFavorite ? 'bg-red-500/20 border border-red-500' : ''
+              }`}>
+                <Heart className={`h-8 w-8 mx-auto mb-2 ${
+                  userInteractions.isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'
+                }`} />
+                <span className={userInteractions.isFavorite ? 'text-red-400 font-semibold' : 'text-gray-400'}>
+                  {userInteractions.isFavorite ? 'Favorited' : 'Add to Favorites'}
+                </span>
+              </div>
+
+              <div className={`bg-gray-800 rounded-xl p-4 text-center transition-all ${
+                userInteractions.isBookmarked ? 'bg-blue-500/20 border border-blue-500' : ''
+              }`}>
+                <Bookmark className={`h-8 w-8 mx-auto mb-2 ${
+                  userInteractions.isBookmarked ? 'text-blue-500 fill-current' : 'text-gray-400'
+                }`} />
+                <span className={userInteractions.isBookmarked ? 'text-blue-400 font-semibold' : 'text-gray-400'}>
+                  {userInteractions.isBookmarked ? 'Bookmarked' : 'Bookmark Game'}
+                </span>
+              </div>
+
+              <div className={`bg-gray-800 rounded-xl p-4 text-center transition-all ${
+                userInteractions.hasPlayed ? 'bg-green-500/20 border border-green-500' : ''
+              }`}>
+                <Play className={`h-8 w-8 mx-auto mb-2 ${
+                  userInteractions.hasPlayed ? 'text-green-500' : 'text-gray-400'
+                }`} />
+                <span className={userInteractions.hasPlayed ? 'text-green-400 font-semibold' : 'text-gray-400'}>
+                  {userInteractions.hasPlayed ? 'Played' : 'Mark as Played'}
+                </span>
               </div>
             </div>
 
@@ -279,14 +587,16 @@ const DetailGame = () => {
                     type="text"
                     value={commentInput}
                     onChange={(e) => setCommentInput(e.target.value)}
-                    placeholder="Share your thoughts about this game..."
+                    placeholder={currentUser ? "Share your thoughts about this game..." : "Please login to comment"}
                     className="flex-1 px-4 w-full py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!currentUser}
                   />
                   <button 
                     type="submit" 
-                    className="px-6 py-3 mt-3 w-full bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+                    className="px-6 py-3 mt-3 w-full bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                    disabled={!currentUser}
                   >
-                    Post
+                    {currentUser ? `Post as ${currentUser.name}` : "Please Login to Comment"}
                   </button>
                 </div>
               </form>
@@ -299,8 +609,18 @@ const DetailGame = () => {
                 <div className="space-y-4">
                   {comments.map((comment) => (
                     <div key={comment.id} className="bg-gray-700 rounded-lg p-4">
-                      <p className="text-gray-200 mb-2">{comment.text}</p>
-                      <span className="text-xs text-gray-400">{comment.timestamp}</span>
+                      <div className="flex items-center gap-3 mb-2">
+                        <img
+                          src={comment.user?.avatar || "https://i.pravatar.cc/300?img=1"}
+                          alt={comment.user?.name}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <div>
+                          <p className="font-semibold text-white">{comment.user?.name}</p>
+                          <span className="text-xs text-gray-400">{comment.timestamp}</span>
+                        </div>
+                      </div>
+                      <p className="text-gray-200 ml-11">{comment.text}</p>
                     </div>
                   ))}
                 </div>
@@ -362,6 +682,38 @@ const DetailGame = () => {
                 </div>
               )}
             </div>
+
+            {/* Profile Progress */}
+            {currentUser && (
+              <div className="bg-gray-800 rounded-2xl p-6 mt-6">
+                <h2 className="text-2xl font-bold mb-4 flex items-center">
+                  <Target className="h-6 w-6 mr-2 text-green-400" />
+                  Your Progress
+                </h2>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Games Played</span>
+                    <span className="text-white font-semibold">{currentUser.stats?.gamesPlayed || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Achievements</span>
+                    <span className="text-white font-semibold">{currentUser.achievements?.length || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Current Level</span>
+                    <span className="text-white font-semibold">Level {currentUser.level || 1}</span>
+                  </div>
+                  <div className="mt-4">
+                    <Link 
+                      to="/profile"
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-200 text-center block"
+                    >
+                      View Full Profile
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
