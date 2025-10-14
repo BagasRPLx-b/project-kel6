@@ -13,25 +13,43 @@ const Navbar = ({ darkMode, setDarkMode }) => {
     if (user) {
       setCurrentUser(JSON.parse(user));
     }
-  }, []);
+
+    // Initialize dark mode from localStorage
+    const savedDarkMode = localStorage.getItem("darkMode");
+    if (savedDarkMode) {
+      const isDark = JSON.parse(savedDarkMode);
+      setDarkMode(isDark);
+      applyDarkMode(isDark);
+    }
+  }, [setDarkMode]);
+
+  const applyDarkMode = (isDark) => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  const handleDarkModeToggle = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem("darkMode", JSON.stringify(newDarkMode));
+    applyDarkMode(newDarkMode);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     setCurrentUser(null);
     setIsOpen(false);
     navigate("/");
-    window.location.reload(); // Refresh to trigger login page
-  };
-
-  const getCurrentUser = () => {
-    const user = localStorage.getItem("currentUser");
-    return user ? JSON.parse(user) : null;
+    window.location.reload();
   };
 
   return (
     <>
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
           {/* Left: Logo */}
           <div className="flex items-center">
@@ -72,12 +90,6 @@ const Navbar = ({ darkMode, setDarkMode }) => {
           {/* Right: Buttons */}
           <div className="flex items-center space-x-4">
             {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-            >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
 
             {/* Profile - Desktop */}
             {currentUser ? (
@@ -91,7 +103,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
                     alt={currentUser.name}
                     className="w-6 h-6 rounded-full"
                   />
-                  <span>{currentUser.name}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{currentUser.name}</span>
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -116,7 +128,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
               onClick={() => setIsOpen(true)}
               className="md:hidden p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
             >
-              <Menu />
+              <Menu className="text-gray-600 dark:text-gray-300" />
             </button>
           </div>
         </div>
@@ -145,7 +157,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Menu</h2>
             <button 
               onClick={() => setIsOpen(false)}
-              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 text-gray-600 dark:text-gray-300"
             >
               <X />
             </button>
